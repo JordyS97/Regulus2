@@ -1,0 +1,745 @@
+{
+  "last_updated": "2026-06-29T09:16:06.312530Z",
+  "portfolio_size_usd": 100000.0,
+  "global_sentiment_score": -1.0,
+  "probability_matrix": {
+    "bearish_downside_odds": 0.74,
+    "bullish_upside_odds": 0.16,
+    "neutral_sideways_odds": 0.1
+  },
+  "recommended_trade_setup": {
+    "asset": "BTC/USDT",
+    "action": "SELL",
+    "entry_price": 59907.68,
+    "take_profit": 55115.07,
+    "stop_loss": 62303.99,
+    "chance_of_win_pct": 74.0,
+    "backtest_matches_found": 148,
+    "historical_success_rate": 0.74
+  },
+  "charts": {
+    "BTC": [
+      {
+        "timestamp": 1780185600000,
+        "price_action": {
+          "open": 74185.84,
+          "high": 74869.73,
+          "low": 73369.44,
+          "close": 73579.69,
+          "volume": 30372
+        },
+        "macro_sentiment_line": -0.3
+      },
+      {
+        "timestamp": 1780272000000,
+        "price_action": {
+          "open": 73579.69,
+          "high": 73765.74,
+          "low": 70715.99,
+          "close": 71319.77,
+          "volume": 29678
+        },
+        "macro_sentiment_line": -0.32
+      },
+      {
+        "timestamp": 1780358400000,
+        "price_action": {
+          "open": 71319.77,
+          "high": 71420.86,
+          "low": 66331.09,
+          "close": 66703.66,
+          "volume": 45121
+        },
+        "macro_sentiment_line": -0.35
+      },
+      {
+        "timestamp": 1780444800000,
+        "price_action": {
+          "open": 66703.66,
+          "high": 67288.57,
+          "low": 63753.38,
+          "close": 64014.37,
+          "volume": 41785
+        },
+        "macro_sentiment_line": -0.37
+      },
+      {
+        "timestamp": 1780531200000,
+        "price_action": {
+          "open": 64014.37,
+          "high": 64235.52,
+          "low": 63189.57,
+          "close": 63801.57,
+          "volume": 40992
+        },
+        "macro_sentiment_line": -0.4
+      },
+      {
+        "timestamp": 1780617600000,
+        "price_action": {
+          "open": 63801.57,
+          "high": 63953.36,
+          "low": 60474.48,
+          "close": 60922.67,
+          "volume": 31593
+        },
+        "macro_sentiment_line": -0.42
+      },
+      {
+        "timestamp": 1780704000000,
+        "price_action": {
+          "open": 60922.67,
+          "high": 61399.91,
+          "low": 60277.12,
+          "close": 60867.41,
+          "volume": 26014
+        },
+        "macro_sentiment_line": -0.44
+      },
+      {
+        "timestamp": 1780790400000,
+        "price_action": {
+          "open": 60867.41,
+          "high": 63479.77,
+          "low": 60479.39,
+          "close": 63239.52,
+          "volume": 27419
+        },
+        "macro_sentiment_line": -0.47
+      },
+      {
+        "timestamp": 1780876800000,
+        "price_action": {
+          "open": 63239.52,
+          "high": 63746.85,
+          "low": 62616.46,
+          "close": 63090.59,
+          "volume": 20027
+        },
+        "macro_sentiment_line": -0.49
+      },
+      {
+        "timestamp": 1780963200000,
+        "price_action": {
+          "open": 63090.59,
+          "high": 63637.24,
+          "low": 61278.61,
+          "close": 61643.78,
+          "volume": 43928
+        },
+        "macro_sentiment_line": -0.52
+      },
+      {
+        "timestamp": 1781049600000,
+        "price_action": {
+          "open": 61643.78,
+          "high": 62216.95,
+          "low": 61153.2,
+          "close": 61449.29,
+          "volume": 35676
+        },
+        "macro_sentiment_line": -0.54
+      },
+      {
+        "timestamp": 1781136000000,
+        "price_action": {
+          "open": 61449.29,
+          "high": 63668.1,
+          "low": 61068.84,
+          "close": 63561.05,
+          "volume": 52513
+        },
+        "macro_sentiment_line": -0.57
+      },
+      {
+        "timestamp": 1781222400000,
+        "price_action": {
+          "open": 63561.05,
+          "high": 63823.84,
+          "low": 63197.69,
+          "close": 63543.2,
+          "volume": 45133
+        },
+        "macro_sentiment_line": -0.59
+      },
+      {
+        "timestamp": 1781308800000,
+        "price_action": {
+          "open": 63543.2,
+          "high": 64720.26,
+          "low": 63385.24,
+          "close": 64421.32,
+          "volume": 28356
+        },
+        "macro_sentiment_line": -0.61
+      },
+      {
+        "timestamp": 1781395200000,
+        "price_action": {
+          "open": 64421.32,
+          "high": 66211.61,
+          "low": 63671.38,
+          "close": 65710.4,
+          "volume": 49202
+        },
+        "macro_sentiment_line": -0.64
+      },
+      {
+        "timestamp": 1781481600000,
+        "price_action": {
+          "open": 65710.4,
+          "high": 66753.27,
+          "low": 65110.29,
+          "close": 66289.5,
+          "volume": 41107
+        },
+        "macro_sentiment_line": -0.66
+      },
+      {
+        "timestamp": 1781568000000,
+        "price_action": {
+          "open": 66289.5,
+          "high": 66690.79,
+          "low": 64860.34,
+          "close": 65600.64,
+          "volume": 26871
+        },
+        "macro_sentiment_line": -0.69
+      },
+      {
+        "timestamp": 1781654400000,
+        "price_action": {
+          "open": 65600.64,
+          "high": 65874.12,
+          "low": 63528.08,
+          "close": 64418.45,
+          "volume": 31717
+        },
+        "macro_sentiment_line": -0.71
+      },
+      {
+        "timestamp": 1781740800000,
+        "price_action": {
+          "open": 64418.45,
+          "high": 64976.5,
+          "low": 62357.21,
+          "close": 62896.47,
+          "volume": 29755
+        },
+        "macro_sentiment_line": -0.73
+      },
+      {
+        "timestamp": 1781827200000,
+        "price_action": {
+          "open": 62896.47,
+          "high": 64308.04,
+          "low": 62628.44,
+          "close": 63540.84,
+          "volume": 49942
+        },
+        "macro_sentiment_line": -0.76
+      },
+      {
+        "timestamp": 1781913600000,
+        "price_action": {
+          "open": 63540.84,
+          "high": 64685.89,
+          "low": 62914.47,
+          "close": 64239.68,
+          "volume": 25816
+        },
+        "macro_sentiment_line": -0.78
+      },
+      {
+        "timestamp": 1782000000000,
+        "price_action": {
+          "open": 64239.68,
+          "high": 64473.05,
+          "low": 62824.06,
+          "close": 63237.54,
+          "volume": 49365
+        },
+        "macro_sentiment_line": -0.81
+      },
+      {
+        "timestamp": 1782086400000,
+        "price_action": {
+          "open": 63237.54,
+          "high": 64310.26,
+          "low": 62491.32,
+          "close": 63952.11,
+          "volume": 45931
+        },
+        "macro_sentiment_line": -0.83
+      },
+      {
+        "timestamp": 1782172800000,
+        "price_action": {
+          "open": 63952.11,
+          "high": 64367.48,
+          "low": 62568.5,
+          "close": 62668.02,
+          "volume": 40856
+        },
+        "macro_sentiment_line": -0.86
+      },
+      {
+        "timestamp": 1782259200000,
+        "price_action": {
+          "open": 62668.02,
+          "high": 62973.28,
+          "low": 60712.44,
+          "close": 60995.13,
+          "volume": 44811
+        },
+        "macro_sentiment_line": -0.88
+      },
+      {
+        "timestamp": 1782345600000,
+        "price_action": {
+          "open": 60995.13,
+          "high": 61313.55,
+          "low": 59608.57,
+          "close": 59721.68,
+          "volume": 40955
+        },
+        "macro_sentiment_line": -0.9
+      },
+      {
+        "timestamp": 1782432000000,
+        "price_action": {
+          "open": 59721.68,
+          "high": 60156.23,
+          "low": 59518.24,
+          "close": 60016.43,
+          "volume": 24798
+        },
+        "macro_sentiment_line": -0.93
+      },
+      {
+        "timestamp": 1782518400000,
+        "price_action": {
+          "open": 60016.43,
+          "high": 60192.34,
+          "low": 59535.08,
+          "close": 59940.1,
+          "volume": 50241
+        },
+        "macro_sentiment_line": -0.95
+      },
+      {
+        "timestamp": 1782604800000,
+        "price_action": {
+          "open": 59940.1,
+          "high": 60326.22,
+          "low": 59417.37,
+          "close": 59532.34,
+          "volume": 45669
+        },
+        "macro_sentiment_line": -0.98
+      },
+      {
+        "timestamp": 1782691200000,
+        "price_action": {
+          "open": 59532.34,
+          "high": 60091.03,
+          "low": 59039.03,
+          "close": 59907.68,
+          "volume": 28551
+        },
+        "macro_sentiment_line": -1.0
+      }
+    ],
+    "ETH": [
+      {
+        "timestamp": 1780185600000,
+        "price_action": {
+          "open": 1988.04,
+          "high": 2026.44,
+          "low": 1975.61,
+          "close": 2004.34,
+          "volume": 51349
+        },
+        "macro_sentiment_line": -0.3
+      },
+      {
+        "timestamp": 1780272000000,
+        "price_action": {
+          "open": 2004.34,
+          "high": 2016.93,
+          "low": 1997.26,
+          "close": 2003.22,
+          "volume": 29362
+        },
+        "macro_sentiment_line": -0.32
+      },
+      {
+        "timestamp": 1780358400000,
+        "price_action": {
+          "open": 2003.22,
+          "high": 2013.33,
+          "low": 1844.98,
+          "close": 1857.72,
+          "volume": 50735
+        },
+        "macro_sentiment_line": -0.35
+      },
+      {
+        "timestamp": 1780444800000,
+        "price_action": {
+          "open": 1857.72,
+          "high": 1869.24,
+          "low": 1795.12,
+          "close": 1811.73,
+          "volume": 41305
+        },
+        "macro_sentiment_line": -0.37
+      },
+      {
+        "timestamp": 1780531200000,
+        "price_action": {
+          "open": 1811.73,
+          "high": 1824.66,
+          "low": 1763.52,
+          "close": 1769.58,
+          "volume": 44623
+        },
+        "macro_sentiment_line": -0.4
+      },
+      {
+        "timestamp": 1780617600000,
+        "price_action": {
+          "open": 1769.58,
+          "high": 1786.83,
+          "low": 1564.47,
+          "close": 1580.86,
+          "volume": 27836
+        },
+        "macro_sentiment_line": -0.42
+      },
+      {
+        "timestamp": 1780704000000,
+        "price_action": {
+          "open": 1580.86,
+          "high": 1591.52,
+          "low": 1558.98,
+          "close": 1568.77,
+          "volume": 24799
+        },
+        "macro_sentiment_line": -0.44
+      },
+      {
+        "timestamp": 1780790400000,
+        "price_action": {
+          "open": 1568.77,
+          "high": 1709.08,
+          "low": 1562.66,
+          "close": 1686.4,
+          "volume": 49683
+        },
+        "macro_sentiment_line": -0.47
+      },
+      {
+        "timestamp": 1780876800000,
+        "price_action": {
+          "open": 1686.4,
+          "high": 1701.02,
+          "low": 1677.93,
+          "close": 1690.15,
+          "volume": 27147
+        },
+        "macro_sentiment_line": -0.49
+      },
+      {
+        "timestamp": 1780963200000,
+        "price_action": {
+          "open": 1690.15,
+          "high": 1703.94,
+          "low": 1627.96,
+          "close": 1637.71,
+          "volume": 47979
+        },
+        "macro_sentiment_line": -0.52
+      },
+      {
+        "timestamp": 1781049600000,
+        "price_action": {
+          "open": 1637.71,
+          "high": 1655.8,
+          "low": 1606.74,
+          "close": 1620.14,
+          "volume": 31940
+        },
+        "macro_sentiment_line": -0.54
+      },
+      {
+        "timestamp": 1781136000000,
+        "price_action": {
+          "open": 1620.14,
+          "high": 1675.77,
+          "low": 1614.17,
+          "close": 1672.28,
+          "volume": 22629
+        },
+        "macro_sentiment_line": -0.57
+      },
+      {
+        "timestamp": 1781222400000,
+        "price_action": {
+          "open": 1672.28,
+          "high": 1679.15,
+          "low": 1658.08,
+          "close": 1665.13,
+          "volume": 22876
+        },
+        "macro_sentiment_line": -0.59
+      },
+      {
+        "timestamp": 1781308800000,
+        "price_action": {
+          "open": 1665.13,
+          "high": 1691.65,
+          "low": 1655.63,
+          "close": 1680.21,
+          "volume": 28604
+        },
+        "macro_sentiment_line": -0.61
+      },
+      {
+        "timestamp": 1781395200000,
+        "price_action": {
+          "open": 1680.21,
+          "high": 1730.17,
+          "low": 1676.94,
+          "close": 1724.61,
+          "volume": 41365
+        },
+        "macro_sentiment_line": -0.64
+      },
+      {
+        "timestamp": 1781481600000,
+        "price_action": {
+          "open": 1724.61,
+          "high": 1805.48,
+          "low": 1711.0,
+          "close": 1794.96,
+          "volume": 50427
+        },
+        "macro_sentiment_line": -0.66
+      },
+      {
+        "timestamp": 1781568000000,
+        "price_action": {
+          "open": 1794.96,
+          "high": 1804.43,
+          "low": 1780.87,
+          "close": 1790.4,
+          "volume": 33743
+        },
+        "macro_sentiment_line": -0.69
+      },
+      {
+        "timestamp": 1781654400000,
+        "price_action": {
+          "open": 1790.4,
+          "high": 1810.97,
+          "low": 1734.93,
+          "close": 1747.89,
+          "volume": 46864
+        },
+        "macro_sentiment_line": -0.71
+      },
+      {
+        "timestamp": 1781740800000,
+        "price_action": {
+          "open": 1747.89,
+          "high": 1753.04,
+          "low": 1696.77,
+          "close": 1709.53,
+          "volume": 50740
+        },
+        "macro_sentiment_line": -0.73
+      },
+      {
+        "timestamp": 1781827200000,
+        "price_action": {
+          "open": 1709.53,
+          "high": 1719.57,
+          "low": 1704.88,
+          "close": 1710.98,
+          "volume": 43705
+        },
+        "macro_sentiment_line": -0.76
+      },
+      {
+        "timestamp": 1781913600000,
+        "price_action": {
+          "open": 1710.98,
+          "high": 1754.05,
+          "low": 1706.17,
+          "close": 1739.3,
+          "volume": 31128
+        },
+        "macro_sentiment_line": -0.78
+      },
+      {
+        "timestamp": 1782000000000,
+        "price_action": {
+          "open": 1739.3,
+          "high": 1758.8,
+          "low": 1691.22,
+          "close": 1704.58,
+          "volume": 28174
+        },
+        "macro_sentiment_line": -0.81
+      },
+      {
+        "timestamp": 1782086400000,
+        "price_action": {
+          "open": 1704.58,
+          "high": 1738.7,
+          "low": 1682.75,
+          "close": 1726.51,
+          "volume": 22271
+        },
+        "macro_sentiment_line": -0.83
+      },
+      {
+        "timestamp": 1782172800000,
+        "price_action": {
+          "open": 1726.51,
+          "high": 1736.66,
+          "low": 1657.24,
+          "close": 1665.44,
+          "volume": 50015
+        },
+        "macro_sentiment_line": -0.86
+      },
+      {
+        "timestamp": 1782259200000,
+        "price_action": {
+          "open": 1665.44,
+          "high": 1675.7,
+          "low": 1615.56,
+          "close": 1619.92,
+          "volume": 33682
+        },
+        "macro_sentiment_line": -0.88
+      },
+      {
+        "timestamp": 1782345600000,
+        "price_action": {
+          "open": 1619.92,
+          "high": 1630.23,
+          "low": 1556.69,
+          "close": 1564.82,
+          "volume": 32488
+        },
+        "macro_sentiment_line": -0.9
+      },
+      {
+        "timestamp": 1782432000000,
+        "price_action": {
+          "open": 1564.82,
+          "high": 1583.53,
+          "low": 1559.19,
+          "close": 1576.62,
+          "volume": 42167
+        },
+        "macro_sentiment_line": -0.93
+      },
+      {
+        "timestamp": 1782518400000,
+        "price_action": {
+          "open": 1576.62,
+          "high": 1581.85,
+          "low": 1564.84,
+          "close": 1571.59,
+          "volume": 21592
+        },
+        "macro_sentiment_line": -0.95
+      },
+      {
+        "timestamp": 1782604800000,
+        "price_action": {
+          "open": 1571.59,
+          "high": 1577.26,
+          "low": 1567.43,
+          "close": 1570.36,
+          "volume": 36924
+        },
+        "macro_sentiment_line": -0.98
+      },
+      {
+        "timestamp": 1782691200000,
+        "price_action": {
+          "open": 1570.36,
+          "high": 1596.38,
+          "low": 1552.8,
+          "close": 1574.48,
+          "volume": 42406
+        },
+        "macro_sentiment_line": -1.0
+      }
+    ]
+  },
+  "market_overview": {
+    "top_trending": {
+      "asset": "Act I: The AI Prophecy (ACT)",
+      "ticker": "ACT",
+      "24h_change_pct": 34.45,
+      "reason": "AI-narrative token velocity and high social volume",
+      "visualization_type": "Bubble Chart"
+    },
+    "top_gainers": [
+      {
+        "asset": "Act I: The AI Prophecy",
+        "ticker": "ACT",
+        "change_24h": 34.45
+      },
+      {
+        "asset": "Synapse",
+        "ticker": "SYN",
+        "change_24h": 27.1
+      },
+      {
+        "asset": "Powerledger",
+        "ticker": "POWR",
+        "change_24h": 17.0
+      }
+    ],
+    "top_losers": [
+      {
+        "asset": "Skyai",
+        "ticker": "SKYAI",
+        "change_24h": -44.65
+      },
+      {
+        "asset": "MYX Finance",
+        "ticker": "MYX",
+        "change_24h": -22.05
+      },
+      {
+        "asset": "Pivx",
+        "ticker": "PIVX",
+        "change_24h": -21.9
+      }
+    ],
+    "visualization_gainers_losers": "Heatmap",
+    "new_listings": [
+      {
+        "asset": "Moon Swap",
+        "ticker": "MOON",
+        "initial_liquidity_usd": 150000,
+        "volatility_index": "High"
+      },
+      {
+        "asset": "Patos Meme Coin",
+        "ticker": "PATOS",
+        "initial_liquidity_usd": 85000,
+        "volatility_index": "Extreme"
+      }
+    ],
+    "visualization_new_listings": "Bubble Chart"
+  }
+}

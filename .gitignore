@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+local_*.json
+firestore_*.json
+.system_generated/
+.agents/
+walkthrough.md
+task.md
+implementation_plan.md
