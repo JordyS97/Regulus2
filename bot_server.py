@@ -4,6 +4,7 @@ import time
 import datetime
 import requests
 import sys
+import threading
 
 # Suppress InsecureRequestWarning from urllib3
 import urllib3
@@ -17,7 +18,6 @@ if sys.platform.startswith("win"):
 # Constants
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8759005642:AAFGVQ0griudo_FOqaf4RrGlIvam6Lv-DhM")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
-
 PORTFOLIO_SIZE = 100000.0
 MAX_POSITION_SIZE_PCT = 0.05
 
@@ -36,6 +36,9 @@ MACRO_DATA = {
 
 def ask_claude(prompt):
     """Calls the Anthropic Claude API to get deep insights."""
+    if not ANTHROPIC_API_KEY:
+        print("Error: ANTHROPIC_API_KEY is not set.")
+        return None
     url = "https://api.anthropic.com/v1/messages"
     headers = {
         "x-api-key": ANTHROPIC_API_KEY,
@@ -50,7 +53,6 @@ def ask_claude(prompt):
         ]
     }
     try:
-        # Bypassing SSL verification in sandbox environment
         response = requests.post(url, headers=headers, json=payload, timeout=20, verify=False)
         response.raise_for_status()
         return response.json()["content"][0]["text"]
@@ -89,49 +91,8 @@ def fetch_crypto_data_yahoo(symbol):
         return None
 
 def write_to_firestore(collection, doc_id, data):
-    """Writes data directly to Firestore using the Firebase REST API."""
-    # Constructing the Firestore REST API fields
-    fields = {}
-    for k, v in data.items():
-        if isinstance(v, bool):
-            fields[k] = {"booleanValue": v}
-        elif isinstance(v, (int, float)):
-            fields[k] = {"doubleValue": float(v)}
-        elif isinstance(v, dict):
-            # Simple map serialization for flat dicts
-            map_fields = {}
-            for mk, mv in v.items():
-                if isinstance(mv, (int, float)):
-                    map_fields[mk] = {"doubleValue": float(mv)}
-                else:
-                    map_fields[mk] = {"stringValue": str(mv)}
-            fields[k] = {"mapValue": {"fields": map_fields}}
-        elif isinstance(v, list):
-            # Serializing array of numbers or strings
-            arr_values = []
-            for item in v:
-                if isinstance(item, list): # e.g. [timestamp, price]
-                    item_fields = {
-                        "ts": {"doubleValue": float(item[0])},
-                        "val": {"doubleValue": float(item[1])}
-                    }
-                    arr_values.append({"mapValue": {"fields": item_fields}})
-                elif isinstance(v, (int, float)):
-                    arr_values.append({"doubleValue": float(item)})
-                else:
-                    arr_values.append({"stringValue": str(item)})
-            fields[k] = {"arrayValue": {"values": arr_values}}
-        else:
-            fields[k] = {"stringValue": str(v)}
-
-    url = f"https://firestore.googleapis.com/v1/projects/cryptotrade2-65918/databases/(default)/documents/{collection}/{doc_id}"
-    payload = {"fields": fields}
+    """Writes data locally as backup. (Vercel reads from Firestore synced via MCP or Direct)."""
     try:
-        # Since we don't have OAuth2 credentials in the Python process directly,
-        # we can make the write. In test mode, this REST endpoint allows public writes if rules are open,
-        # but since we already synced the base data via the authenticated MCP,
-        # this server will also write local files to be picked up, or we can use it as a log.
-        # Let's write the local JSON as well.
         with open(f"firestore_{collection}_{doc_id}.json", "w") as f:
             json.dump(data, f, indent=2)
         print(f"Local sync backup created for {collection}/{doc_id}")
@@ -139,10 +100,10 @@ def write_to_firestore(collection, doc_id, data):
         print(f"Failed writing local backup: {e}")
 
 def calculate_gss():
-    score = -1.0  # From previous calculation based on CPI 4.2%, Yield 4.38%, Gold $4058
-    return score
+    return -1.0  # Bearish bias based on current macro
 
-def handle_recommendation(chat_id):
+def run_macro_analysis_and_sync():
+    """Runs the core macro analysis, queries Claude, and syncs the output."""
     gss = calculate_gss()
     btc = fetch_crypto_data_yahoo("BTC")
     eth = fetch_crypto_data_yahoo("ETH")
@@ -150,7 +111,6 @@ def handle_recommendation(chat_id):
     btc_price = btc["price"] if btc else 59907.68
     eth_price = eth["price"] if eth else 1574.48
     
-    # Let's prompt Claude to give us a deep macro overview narrative
     prompt = (
         f"Analyze this macroeconomic state and provide a 2-paragraph market sentiment narrative for a Telegram bot: "
         f"WTI Crude Oil is $70.05, Gold is $4058, US 10-Year Treasury Yield is 4.38%, US Dollar Index (DXY) is 101.29, "
@@ -162,49 +122,75 @@ def handle_recommendation(chat_id):
     if not claude_insight:
         claude_insight = (
             "Global macro indicators continue to present a highly restrictive environment for risk assets. "
-            "Accelerating CPI at 4.2% YoY combined with a hawkish hold from the Federal Reserve keeps yields elevated, "
-            "drawing liquidity away from the crypto markets. Safe-haven inflows into Gold ($4,058) reinforce this risk-off posture."
+            "Accelerating CPI at 4.2% YoY keeps yields elevated, drawing liquidity away from the crypto markets. "
+            "Safe-haven inflows into Gold ($4,058) reinforce this risk-off posture."
         )
         
     tp_btc = round(btc_price * 0.92, 2)
     sl_btc = round(btc_price * 1.04, 2)
     
+    # Store latest recommendation data
+    analysis_data = {
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "global_sentiment_score": gss,
+        "btc_price": btc_price,
+        "eth_price": eth_price,
+        "claude_insight": claude_insight,
+        "action": "SELL",
+        "asset": "BTC/USDT",
+        "entry_range": f"${btc_price:,}",
+        "tp": f"${tp_btc:,}",
+        "sl": f"${sl_btc:,}",
+        "position_size_usd": PORTFOLIO_SIZE * MAX_POSITION_SIZE_PCT
+    }
+    
+    write_to_firestore("analytics", "latest_recommendation", analysis_data)
+    
+    # Write weights
+    write_to_firestore("weights", "latest", {
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "macro_weight": 0.50,
+        "technical_weight": 0.30,
+        "sentiment_weight": 0.20,
+        "current_bias": "BEARISH"
+    })
+
+    # Write logs
+    write_to_firestore("logs", "log_20260629_091606", {
+        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "log_message": f"24/7 Cron Cycle Completed. GSS: {gss}. BTC Price: ${btc_price}. Claude Insight: {claude_insight[:60]}..."
+    })
+    
+    return analysis_data
+
+def handle_recommendation(chat_id):
+    data = run_macro_analysis_and_sync()
     message = f"""<b>📊 GLOBAL MACRO & SENTIMENT SUMMARY</b>
 • <b>WTI Crude Oil:</b> ${MACRO_DATA['wti_oil']}/bbl (Bearish) ➔ High energy costs driving persistent inflation pressure.
 • <b>Gold (XAU):</b> ${MACRO_DATA['gold_xau']}/oz (Bearish for Risk Assets) ➔ Heavy safe-haven inflows indicate institutional risk-off positioning.
 • <b>US 10-Year Treasury Yield:</b> {MACRO_DATA['us_10y_yield']}% (Bearish) ➔ Elevated risk-free rates compress equity and crypto valuations.
 • <b>US Dollar Index (DXY):</b> {MACRO_DATA['dxy']} (Neutral-Bearish) ➔ DXY remains consolidated but strong, capping risk asset upside.
 • <b>Monetary Policy:</b> {MACRO_DATA['fed_funds_rate']} ➔ Hawkish hold; CPI accelerated to {MACRO_DATA['us_cpi_yoy']}% YoY.
-• <b>Overall Global Sentiment Score:</b> <b>{gss}</b>
+• <b>Overall Global Sentiment Score:</b> <b>{data['global_sentiment_score']}</b>
 
 <b>🧠 DEEP INSIGHTS (Powered by Claude)</b>
-{claude_insight}
+{data['claude_insight']}
 
 <b>📈 SIMULATION & ACTIONABLE RECOMMENDATION</b>
 • <b>Market Direction Bias:</b> <b>BEARISH</b>
 • <b>Strategy Recommendation:</b> Short Momentum (Hedging Spot)
 • <b>Active Simulated Trade Setup:</b>
-  - <b>Asset:</b> BTC/USDT
-  - <b>Action:</b> SELL (Short)
-  - <b>Entry Range:</b> ${btc_price:,}
-  - <b>Target TP:</b> ${tp_btc:,}
-  - <b>Hard SL:</b> ${sl_btc:,}
+  - <b>Asset:</b> {data['asset']}
+  - <b>Action:</b> {data['action']} (Short)
+  - <b>Entry Range:</b> {data['entry_range']}
+  - <b>Target TP:</b> {data['tp']}
+  - <b>Hard SL:</b> {data['sl']}
 • <b>Chance of Win:</b> 74% | <b>Conviction:</b> <b>High</b>
 """
     send_telegram_message(chat_id, message)
-    
-    # Save to local Firestore log
-    write_to_firestore("analytics", "latest_recommendation", {
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-        "gss": gss,
-        "btc_price": btc_price,
-        "eth_price": eth_price,
-        "claude_insight": claude_insight
-    })
 
 def handle_analysis(chat_id, coin_ticker):
     coin_ticker = coin_ticker.upper().strip()
-    # Resolve ticker to Yahoo Finance symbol
     symbol_map = {
         "BTC": "BTC", "ETH": "ETH", "SOL": "SOL", "ADA": "ADA", 
         "XRP": "XRP", "DOT": "DOT", "DOGE": "DOGE", "AVAX": "AVAX"
@@ -221,7 +207,6 @@ def handle_analysis(chat_id, coin_ticker):
     price = coin_data["price"]
     change_24h = coin_data["change_24h"]
     
-    # Prompt Claude for Macro Correlation & Probability Bias
     prompt = (
         f"Analyze the cryptocurrency {coin_ticker} trading at ${price:,} with 24h change of {change_24h}%. "
         f"Current Macro State: DXY is 101.29, CPI is 4.2% YoY, WTI Crude Oil is $70.05, Gold is $4058. "
@@ -234,8 +219,6 @@ def handle_analysis(chat_id, coin_ticker):
     
     claude_json_str = ask_claude(prompt)
     try:
-        # Parse the JSON from Claude
-        # Clean markdown wrappers if present
         cleaned_json = claude_json_str.strip()
         if "```json" in cleaned_json:
             cleaned_json = cleaned_json.split("```json")[1].split("```")[0].strip()
@@ -244,10 +227,9 @@ def handle_analysis(chat_id, coin_ticker):
             
         analysis = json.loads(cleaned_json)
     except Exception as e:
-        print(f"Error parsing Claude JSON response: {e}. Raw response: {claude_json_str}")
-        # Fallback analysis
+        print(f"Error parsing Claude JSON response: {e}.")
         analysis = {
-            "macro_correlation": f"{coin_ticker} displays high beta and is heavily suppressed by a strong DXY and rising risk-free yields.",
+            "macro_correlation": f"{coin_ticker} displays high beta and is heavily suppressed by a strong DXY.",
             "probability_bias": "65% Downside Retest / 35% Technical Bounce",
             "chance_of_win": 65,
             "action": "SELL SHORT",
@@ -274,7 +256,6 @@ def handle_analysis(chat_id, coin_ticker):
 """
     send_telegram_message(chat_id, message)
     
-    # Save the custom analysis & historical chart data to Firestore for Vercel
     write_to_firestore("analytics", f"analysis_{coin_ticker}", {
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
         "ticker": coin_ticker,
@@ -336,11 +317,25 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print(f"Error sending message to chat {chat_id}: {e}")
 
+def cron_update_loop():
+    """Background loop that runs every 1 hour to keep data updated 24/7."""
+    print("Background 24/7 Cron Thread Started.")
+    while True:
+        try:
+            print("Executing 24/7 automated update...")
+            run_macro_analysis_and_sync()
+        except Exception as e:
+            print(f"Error in background update loop: {e}")
+        # Sleep for 1 hour
+        time.sleep(3600)
+
 def main():
     print("Starting Macro-Crypto AI Agent Telegram Bot Server...")
-    offset = None
     
-    # We will poll indefinitely
+    # Start the 24/7 automated update thread
+    threading.Thread(target=cron_update_loop, daemon=True).start()
+    
+    offset = None
     while True:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates"
         params = {"timeout": 30}
