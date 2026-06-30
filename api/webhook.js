@@ -182,14 +182,20 @@ export default async function handler(req, res) {
       const claudeJsonStr = await askClaude(prompt);
       let analysis = {};
       try {
-        let cleanedJson = claudeJsonStr.trim();
-        if (cleanedJson.includes("```json")) {
-          cleanedJson = cleanedJson.split("```json")[1].split("```")[0].trim();
-        } else if (cleanedJson.includes("```")) {
-          cleanedJson = cleanedJson.split("```")[1].split("```")[0].trim();
+        if (claudeJsonStr) {
+          const startIdx = claudeJsonStr.indexOf("{");
+          const endIdx = claudeJsonStr.lastIndexOf("}");
+          if (startIdx !== -1 && endIdx !== -1) {
+            const jsonSub = claudeJsonStr.substring(startIdx, endIdx + 1);
+            analysis = JSON.parse(jsonSub);
+          } else {
+            throw new Error("No JSON block found in response");
+          }
+        } else {
+          throw new Error("Empty response from Claude");
         }
-        analysis = JSON.parse(cleanedJson);
       } catch (e) {
+        console.error("JSON parsing failed, using fallback:", e);
         analysis = {
           macro_correlation: `${ticker} displays high beta and is heavily suppressed by a strong DXY.`,
           probability_bias: "65% Downside Retest / 35% Technical Bounce",
@@ -202,6 +208,7 @@ export default async function handler(req, res) {
           conviction: "Medium"
         };
       }
+
 
       const messageHtml = `🪙 <b>ANALISIS TARGET: ${ticker}</b>
 

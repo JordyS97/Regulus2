@@ -146,6 +146,27 @@ def run_macro_analysis_and_sync():
     
     write_to_firestore("analytics", "latest_recommendation", analysis_data)
     
+    # Also seed the default analysis_BTC document so the dashboard chart loads by default
+    if btc:
+        write_to_firestore("analytics", "analysis_BTC", {
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+            "ticker": "BTC",
+            "price": btc_price,
+            "change_24h": btc["change_24h"],
+            "analysis": {
+                "macro_correlation": "BTC is the primary market driver, highly sensitive to DXY and yields.",
+                "probability_bias": "74% Downside / 26% Upside",
+                "chance_of_win": 74,
+                "action": "SELL",
+                "entry_zone": f"${btc_price}",
+                "tp1": f"${tp_btc}",
+                "tp2": f"${tp_btc * 0.95:.2f}",
+                "sl": f"${sl_btc}",
+                "conviction": "High"
+            },
+            "historical_data": btc["history"]
+        })
+    
     # Write weights
     write_to_firestore("weights", "latest", {
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
