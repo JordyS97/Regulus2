@@ -21,7 +21,6 @@ async function sendTelegramMessage(chatId, text) {
 async function writeToFirestore(collection, docId, fields) {
   const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${collection}/${docId}?key=${FIREBASE_API_KEY}`;
   
-  // Format fields into Firestore REST structure
   const formattedFields = {};
   for (const [key, value] of Object.entries(fields)) {
     if (typeof value === "string") {
@@ -34,13 +33,13 @@ async function writeToFirestore(collection, docId, fields) {
   }
 
   await fetch(url, {
-    method: "PATCH", // PATCH creates or overwrites the document
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fields: formattedFields })
   });
 }
 
-// Helper to fetch crypto price from Yahoo Finance (via Vercel fetch)
+// Helper to fetch crypto price from Yahoo Finance
 async function fetchCryptoPrice(ticker) {
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}-USD`;
@@ -51,7 +50,6 @@ async function fetchCryptoPrice(ticker) {
     const prevClose = result.meta.chartPreviousClose;
     const change = ((price - prevClose) / prevClose) * 100;
     
-    // Extract history
     const history = [];
     const timestamps = result.timestamp || [];
     const closes = result.indicators.quote[0].close || [];
@@ -68,29 +66,37 @@ async function fetchCryptoPrice(ticker) {
   }
 }
 
-// Helper to query Claude
+// Helper to query Claude with detailed error diagnostics
 async function askClaude(prompt) {
-  if (!ANTHROPIC_API_KEY) return null;
+  if (!ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is not set in Vercel Environment Variables");
+  }
   const url = "https://api.anthropic.com/v1/messages";
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
-    const data = await res.json();
+  
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(`Anthropic API returned ${res.status}: ${errData?.error?.message || res.statusText}`);
+  }
+
+  const data = await res.json();
+  if (data.content && data.content[0] && data.content[0].text) {
     return data.content[0].text;
-  } catch (e) {
-    console.error("Claude call failed:", e);
-    return null;
+  } else {
+    throw new Error("Response structure from Claude was unexpected (no content text)");
   }
 }
 
@@ -121,9 +127,13 @@ export default async function handler(req, res) {
       
       const prompt = `Analyze this macroeconomic state and provide a 2-paragraph market sentiment narrative for a Telegram bot: WTI Crude Oil is $70.05, Gold is $4058, US 10-Year Treasury Yield is 4.38%, US Dollar Index (DXY) is 101.29, Fed Funds Rate is 3.50%-3.75% (Hawkish Hold), US CPI is 4.2% YoY. Bitcoin is trading at $${btcPrice}.`;
       
-      let claudeInsight = await askClaude(prompt);
-      if (!claudeInsight) {
-        claudeInsight = "Global macro indicators continue to present a highly restrictive environment for risk assets. Accelerating CPI at 4.2% YoY keeps yields elevated, drawing liquidity away from the crypto markets.";
+      let claudeInsight = "";
+      let errorDetail = "";
+      try {
+        claudeInsight = await askClaude(prompt);
+      } catch (e) {
+        errorDetail = e.message;
+        claudeInsight = `⚠️ [Claude API Error: ${errorDetail}]. Using local backup analysis.`;
       }
 
       const tp = btcPrice * 0.92;
@@ -137,7 +147,7 @@ export default async function handler(req, res) {
 • <b>Overall Global Sentiment Score:</b> <b>-1.0</b>
 
 <b>🧠 DEEP INSIGHTS (Powered by Claude)</b>
-{claudeInsight}
+${claudeInsight}
 
 <b>📈 SIMULATION & ACTIONABLE RECOMMENDATION</b>
 • <b>Market Direction Bias:</b> <b>BEARISH</b>
@@ -150,9 +160,8 @@ export default async function handler(req, res) {
   - <b>Hard SL:</b> $${sl.toLocaleString()}
 • <b>Chance of Win:</b> 74% | <b>Conviction:</b> <b>High</b>`;
 
-      await sendTelegramMessage(chatId, messageHtml.replace("{claudeInsight}", claudeInsight));
+      await sendTelegramMessage(chatId, messageHtml);
       
-      // Sync to Firestore
       await writeToFirestore("analytics", "latest_recommendation", {
         timestamp: new Date().toISOString(),
         global_sentiment_score: -1.0,
@@ -179,7 +188,14 @@ export default async function handler(req, res) {
 
       const prompt = `Analyze the cryptocurrency ${ticker} trading at $${coin.price} with 24h change of ${coin.change}%. Current Macro State: DXY is 101.29, CPI is 4.2% YoY, WTI Crude Oil is $70.05, Gold is $4058. Describe the coin's macro correlation (e.g. beta to DXY) in 1 sentence. Suggest a realistic 'Real-time Probability Bias' and a 'Chance of Win' (percentage) for a simulated position, plus entry zone, TP1, TP2, and SL. Keep the output in JSON format with keys: 'macro_correlation', 'probability_bias', 'chance_of_win', 'action', 'entry_zone', 'tp1', 'tp2', 'sl', 'conviction'.`;
       
-      const claudeJsonStr = await askClaude(prompt);
+      let claudeJsonStr = "";
+      let errorDetail = "";
+      try {
+        claudeJsonStr = await askClaude(prompt);
+      } catch (e) {
+        errorDetail = e.message;
+      }
+
       let analysis = {};
       try {
         if (claudeJsonStr) {
@@ -192,7 +208,7 @@ export default async function handler(req, res) {
             throw new Error("No JSON block found in response");
           }
         } else {
-          throw new Error("Empty response from Claude");
+          throw new Error(errorDetail || "Empty response from Claude");
         }
       } catch (e) {
         console.error("JSON parsing failed, using fallback:", e);
@@ -200,7 +216,7 @@ export default async function handler(req, res) {
           macro_correlation: `${ticker} displays high beta and is heavily suppressed by a strong DXY.`,
           probability_bias: "65% Downside Retest / 35% Technical Bounce",
           chance_of_win: 65,
-          action: "SELL SHORT",
+          action: `SELL SHORT (Fallback - ${e.message})`,
           entry_zone: `$${coin.price} - $${(coin.price * 1.02).toFixed(2)}`,
           tp1: `$${(coin.price * 0.90).toFixed(2)}`,
           tp2: `$${(coin.price * 0.85).toFixed(2)}`,
@@ -208,7 +224,6 @@ export default async function handler(req, res) {
           conviction: "Medium"
         };
       }
-
 
       const messageHtml = `🪙 <b>ANALISIS TARGET: ${ticker}</b>
 
@@ -226,7 +241,6 @@ export default async function handler(req, res) {
 
       await sendTelegramMessage(chatId, messageHtml);
       
-      // Sync to Firestore
       await writeToFirestore("analytics", `analysis_${ticker}`, {
         timestamp: new Date().toISOString(),
         ticker: ticker,
