@@ -39,7 +39,8 @@ import {
   Terminal, 
   Compass, 
   Flame, 
-  Activity 
+  Activity,
+  Database
 } from "lucide-react";
 
 // Firebase Configuration (using cryptotrade2-65918)
@@ -61,9 +62,13 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
+  const [databaseError, setDatabaseError] = useState("");
   
-  // Real-time data states
-  const [searchTicker, setSearchTicker] = useState("BTC");
+  // Search states
+  const [searchQuery, setSearchQuery] = useState("BTC");
+  const [activeTicker, setActiveTicker] = useState("BTC");
+  
+  // Data states
   const [activeAnalysis, setActiveAnalysis] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [recommendation, setRecommendation] = useState(null);
@@ -85,8 +90,22 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
 
-    // 1. Listen to active coin analysis (based on search ticker)
-    const analysisRef = doc(db, "analytics", `analysis_${searchTicker.toUpperCase()}`);
+    setDatabaseError("");
+
+    const handleDbError = (err) => {
+      console.error("Firestore error:", err);
+      if (err.code === "permission-denied") {
+        setDatabaseError(
+          "Database Access Blocked: Your Vercel frontend is being blocked by Firestore. " +
+          "Please verify that you have updated your Firestore Security Rules to allow public reads."
+        );
+      } else {
+        setDatabaseError(`Database error: ${err.message}`);
+      }
+    };
+
+    // 1. Listen to active coin analysis
+    const analysisRef = doc(db, "analytics", `analysis_${activeTicker}`);
     const unsubAnalysis = onSnapshot(analysisRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -108,12 +127,13 @@ export default function App() {
           setChartData(formatted);
         }
       } else {
-        setSearchError(`Analysis for ${searchTicker.toUpperCase()} not found. Run '/analysis ${searchTicker.toUpperCase()}' in Telegram to generate it!`);
-        if (searchTicker.toUpperCase() !== "BTC") {
-          setSearchTicker("BTC");
+        setSearchError(`Analysis for ${activeTicker} not found in Firestore. Run '/analysis ${activeTicker}' in Telegram to generate it!`);
+        // Fall back to BTC but don't reset the input box
+        if (activeTicker !== "BTC") {
+          setActiveTicker("BTC");
         }
       }
-    });
+    }, handleDbError);
 
     // 2. Listen to latest global recommendation
     const recRef = doc(db, "analytics", "latest_recommendation");
@@ -121,7 +141,7 @@ export default function App() {
       if (docSnap.exists()) {
         setRecommendation(docSnap.data());
       }
-    });
+    }, handleDbError);
 
     // 3. Listen to model weights
     const weightsRef = doc(db, "weights", "latest");
@@ -129,7 +149,7 @@ export default function App() {
       if (docSnap.exists()) {
         setWeights(docSnap.data());
       }
-    });
+    }, handleDbError);
 
     // 4. Listen to active positions
     const posRef = doc(db, "positions", "btc_short_20260629");
@@ -137,7 +157,7 @@ export default function App() {
       if (docSnap.exists()) {
         setPositions([docSnap.data()]);
       }
-    });
+    }, handleDbError);
 
     // 5. Listen to training logs
     const logRef = doc(db, "logs", "log_20260629_091606");
@@ -145,7 +165,7 @@ export default function App() {
       if (docSnap.exists()) {
         setLogs([docSnap.data()]);
       }
-    });
+    }, handleDbError);
 
     return () => {
       unsubAnalysis();
@@ -154,7 +174,14 @@ export default function App() {
       unsubPos();
       unsubLogs();
     };
-  }, [user, searchTicker]);
+  }, [user, activeTicker]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setActiveTicker(searchQuery.trim().toUpperCase());
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setAuthError("");
@@ -177,7 +204,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "screen", backgroundColor: "#020617" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", backgroundColor: "#020617" }}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
       </div>
     );
@@ -244,15 +271,15 @@ export default function App() {
           </div>
 
           {/* Search Ticker */}
-          <div className="search-bar">
+          <form onSubmit={handleSearchSubmit} className="search-bar">
             <Search style={{ width: "16px", height: "16px", color: "var(--text-secondary)" }} />
             <input 
               type="text" 
-              placeholder="Search ticker (e.g. SOL, ETH)"
-              value={searchTicker}
-              onChange={(e) => setSearchTicker(e.target.value)}
+              placeholder="Type ticker & press Enter"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </form>
 
           {/* User Profile */}
           <div className="user-profile">
@@ -270,6 +297,21 @@ export default function App() {
 
       {/* Main Content */}
       <main className="dashboard-main">
+        {databaseError && (
+          <div className="error-banner" style={{ marginBottom: "24px", background: "rgba(244,63,94,0.15)", border: "1px solid rgba(244,63,94,0.3)" }}>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <Database style={{ color: "var(--rose-primary)", width: "20px", height: "20px" }} />
+              <strong>Database Connection Error</strong>
+            </div>
+            <p style={{ marginTop: "6px" }}>{databaseError}</p>
+            <p style={{ marginTop: "8px" }}>
+              <a href="https://console.firebase.google.com/project/cryptotrade2-65918/firestore/rules" target="_blank" rel="noreferrer" style={{ color: "var(--sky-primary)", fontWeight: "bold" }}>
+                👉 Click here to open Firebase Rules and allow public read
+              </a>
+            </p>
+          </div>
+        )}
+
         {searchError && (
           <div className="error-banner" style={{ marginBottom: "24px" }}>
             <strong>⚠️ Search Alert</strong>
@@ -356,28 +398,34 @@ export default function App() {
             <div className="dashboard-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                 <div>
-                  <h3 style={{ fontSize: "16px", fontWeight: 700 }}>{searchTicker.toUpperCase()}/USD Market Feed</h3>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700 }}>{activeTicker}/USD Market Feed</h3>
                   <p style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Price + Volume + Macro Sentiment Overlay Line (30 Days)</p>
                 </div>
               </div>
 
               <div style={{ width: "100%", height: "260px" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData} margin={{ top: 10, right: -5, left: -25, bottom: 0 }}>
-                    <CartesianGrid stroke="rgba(255,255,255,0.03)" vertical={false} />
-                    <XAxis dataKey="date" stroke="var(--text-secondary)" fontSize={9} tickLine={false} />
-                    <YAxis yAxisId="left" stroke="var(--sky-primary)" fontSize={9} domain={["auto", "auto"]} tickLine={false} />
-                    <YAxis yAxisId="right" orientation="right" stroke="var(--rose-primary)" fontSize={9} domain={[-1, 1]} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: "var(--bg-color)", borderColor: "var(--border-color)", borderRadius: "10px" }} 
-                      labelStyle={{ fontWeight: "bold", color: "#fff" }}
-                    />
-                    <Legend fontSize={10} />
-                    <Bar yAxisId="left" dataKey="volume" name="Volume" barSize={10} fill="var(--sky-primary)" opacity={0.12} />
-                    <Line yAxisId="left" type="monotone" dataKey="price" name="Price (USD)" stroke="var(--sky-primary)" strokeWidth={2} dot={false} />
-                    <Line yAxisId="right" type="monotone" dataKey="sentiment" name="Macro Sentiment" stroke="var(--rose-primary)" strokeWidth={1.5} strokeDasharray="3 3" dot={false} />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={chartData} margin={{ top: 10, right: -5, left: -25, bottom: 0 }}>
+                      <CartesianGrid stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <XAxis dataKey="date" stroke="var(--text-secondary)" fontSize={9} tickLine={false} />
+                      <YAxis yAxisId="left" stroke="var(--sky-primary)" fontSize={9} domain={["auto", "auto"]} tickLine={false} />
+                      <YAxis yAxisId="right" orientation="right" stroke="var(--rose-primary)" fontSize={9} domain={[-1, 1]} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: "var(--bg-color)", borderColor: "var(--border-color)", borderRadius: "10px" }} 
+                        labelStyle={{ fontWeight: "bold", color: "#fff" }}
+                      />
+                      <Legend fontSize={10} />
+                      <Bar yAxisId="left" dataKey="volume" name="Volume" barSize={10} fill="var(--sky-primary)" opacity={0.12} />
+                      <Line yAxisId="left" type="monotone" dataKey="price" name="Price (USD)" stroke="var(--sky-primary)" strokeWidth={2} dot={false} />
+                      <Line yAxisId="right" type="monotone" dataKey="sentiment" name="Macro Sentiment" stroke="var(--rose-primary)" strokeWidth={1.5} strokeDasharray="3 3" dot={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-secondary)", fontSize: "13px" }}>
+                    No chart data available. Database may be locked or empty.
+                  </div>
+                )}
               </div>
             </div>
 
